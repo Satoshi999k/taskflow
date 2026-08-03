@@ -46,3 +46,23 @@ A full-stack, multi-tenant project management application scaffold for building 
 2. Deploy the backend as a separate Node.js service (Vercel, Render, Fly, Railway, or container host).
 3. Configure environment variables from `apps/server/.env.example`.
 4. If using Vercel, point the project to `apps/server`.
+
+## Backend environment variables
+
+Set these in your deployment provider:
+
+- `DATABASE_URL` — Supabase Postgres direct connection string
+- `JWT_ACCESS_SECRET` — secret for access tokens
+- `JWT_REFRESH_SECRET` — secret for refresh tokens
+- `JWT_ACCESS_EXPIRES` — e.g. `15m`
+- `JWT_REFRESH_EXPIRES` — e.g. `7d`
+- `CLIENT_URL` — frontend origin URL
+
+## Frontend environment variables
+
+Set these in your deployment provider or `.env`:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_KEY`
+- `VITE_API_URL`
+- `VITE_SOCKET_URL`
