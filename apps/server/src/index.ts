@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import apiRouter from "./routes";
 
 const app = express();
 const httpServer = createServer(app);
@@ -20,10 +21,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
-
-app.get("/api/v1/health", (req, res) => {
-  res.json({ status: "ok" });
-});
+app.use(apiRouter);
 
 io.of("/board").on("connection", (socket) => {
   socket.on("join", (boardId) => {

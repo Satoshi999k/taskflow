@@ -66,3 +66,15 @@ Set these in your deployment provider or `.env`:
 - `VITE_SUPABASE_KEY`
 - `VITE_API_URL`
 - `VITE_SOCKET_URL`
+
+## Alternative Supabase setup without Prisma
+
+If you cannot connect to Supabase Postgres directly, you can create the database with Supabase SQL and use the Supabase client instead of Prisma:
+
+1. Open the Supabase dashboard for your project.
+2. Go to Database → SQL Editor.
+3. Paste the SQL from `supabase-schema.sql`.
+4. Run the script to create all tables.
+5. Use Supabase client calls in your app instead of Prisma.
+
+This avoids direct Postgres access from your local machine and works over HTTPS.

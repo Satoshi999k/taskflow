@@ -3,7 +3,7 @@
 
 
 
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 
 const App = () => {
   const [showLogin, setShowLogin] = useState(false);
@@ -11,10 +11,33 @@ const App = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
+
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setShowDashboard(true);
+    setErrorMessage("");
+
+    try {
+      const response = await fetch(`${apiUrl}/api/v1/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const json = await response.json();
+
+      if (!response.ok) {
+        setErrorMessage(json.error || "Login failed");
+        return;
+      }
+
+      setShowDashboard(true);
+    } catch (error) {
+      console.error(error);
+      setErrorMessage("Unable to reach the login server. Please try again.");
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -892,6 +915,8 @@ const App = () => {
             <button type="submit" className="btn-submit">
               Log in <span className="material-symbols-outlined">arrow_forward</span>
             </button>
+
+            {errorMessage ? <div className="form-error">{errorMessage}</div> : null}
           </form>
 
           <div className="form-footer">
