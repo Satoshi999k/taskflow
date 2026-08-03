@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  avatarUrl     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  memberships   WorkspaceMember[]
+  comments      Comment[]
+  notifications Notification[]
+  assignedCards CardAssignee[]
+}
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  createdAt   DateTime @default(now())
+
+  members     WorkspaceMember[]
+  boards      Board[]
+}
+
+model WorkspaceMember {
+  id          String   @id @default(cuid())
+  role        Role     @default(MEMBER)
+  userId      String
+  workspaceId String
+
+  user        User      @relation(fields: [userId], references: [id])
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@unique([userId, workspaceId])
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+model Board {
+  id          String   @id @default(cuid())
+  title       String
+  workspaceId String
+  createdAt   DateTime @default(now())
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  lists       List[]
+  labels      Label[]
+}
+
+model List {
+  id        String   @id @default(cuid())
+  title     String
+  position  Float
+  boardId   String
+
+  board     Board  @relation(fields: [boardId], references: [id])
+  cards     Card[]
+}
+
+model Card {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  position    Float
+  dueDate     DateTime?
+  listId      String
+  createdAt   DateTime  @default(now())
+
+  list        List       @relation(fields: [listId], references: [id])
+  assignees   CardAssignee[]
+  comments    Comment[]
+  attachments Attachment[]
+  checklist   ChecklistItem[]
+  labels      Label[]    @relation("CardLabels")
+}
+
+model CardAssignee {
+  id     String @id @default(cuid())
+  cardId String
+  userId String
+
+  card   Card @relation(fields: [cardId], references: [id])
+  user   User @relation(fields: [userId], references: [id])
+
+  @@unique([cardId, userId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  cardId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  card      Card @relation(fields: [cardId], references: [id])
+  user      User @relation(fields: [userId], references: [id])
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  fileName  String
+  fileUrl   String
+  fileType  String
+  fileSize  Int
+  cardId    String
+  createdAt DateTime @default(now())
+
+  card      Card @relation(fields: [cardId], references: [id])
+}
+
+model ChecklistItem {
+  id        String  @id @default(cuid())
+  text      String
+  isDone    Boolean @default(false)
+  cardId    String
+
+  card      Card @relation(fields: [cardId], references: [id])
+}
+
+model Label {
+  id      String @id @default(cuid())
+  name    String
+  color   String
+  boardId String
+
+  board   Board  @relation(fields: [boardId], references: [id])
+  cards   Card[] @relation("CardLabels")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User @relation(fields: [userId], references: [id])
+}
