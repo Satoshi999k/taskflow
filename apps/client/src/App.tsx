@@ -71,18 +71,26 @@ const App = () => {
         return;
       }
 
-      let userLabel = json.user?.user_metadata?.full_name || json.user?.email;
+      let userLabel =
+        json.user?.user_metadata?.full_name ||
+        json.user?.user_metadata?.name ||
+        json.user?.email;
 
-      // Fallback: try to read a profiles table on Supabase for full name
+      // Fallback: try to read the app users table on Supabase for the display name.
       try {
-        if (!userLabel && json.user?.id) {
-          const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", json.user.id).maybeSingle();
-          if (profile && (profile as any).full_name) {
-            userLabel = (profile as any).full_name;
+        if (json.user?.id) {
+          const { data: appUser } = await supabase
+            .from("users")
+            .select("name")
+            .eq("id", json.user.id)
+            .maybeSingle();
+
+          if (appUser && (appUser as any).name) {
+            userLabel = (appUser as any).name;
           }
         }
       } catch (err) {
-        console.warn("Failed to fetch profile full_name from Supabase", err);
+        console.warn("Failed to fetch app user name from Supabase", err);
       }
 
       setUserName(userLabel || "User");
