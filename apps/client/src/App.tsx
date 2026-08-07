@@ -3,17 +3,43 @@
 
 
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 const App = () => {
-  const [showLogin, setShowLogin] = useState(false);
-  const [showDashboard, setShowDashboard] = useState(true);
+  const [showLogin, setShowLogin] = useState(true);
+  const [showDashboard, setShowDashboard] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [backendStatus, setBackendStatus] = useState<"checking" | "ok" | "error">("checking");
+  const [backendMessage, setBackendMessage] = useState("Checking login server...");
+  const [userName, setUserName] = useState("Alex Rivera");
 
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    const checkBackend = async () => {
+      if (!apiUrl) {
+        setBackendStatus("error");
+        setBackendMessage("Missing VITE_API_URL. Set the deployed backend URL in your env.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`${apiUrl}/api/v1/health`);
+        if (!response.ok) throw new Error("Health check failed");
+        setBackendStatus("ok");
+        setBackendMessage("Backend connected");
+      } catch (error) {
+        console.error("Backend health check error:", error);
+        setBackendStatus("error");
+        setBackendMessage("Backend unavailable. Update VITE_API_URL to your deployed backend.");
+      }
+    };
+
+    checkBackend();
+  }, [apiUrl]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -33,7 +59,10 @@ const App = () => {
         return;
       }
 
+      const userLabel = json.user?.user_metadata?.full_name || json.user?.email || "User";
+      setUserName(userLabel);
       setShowDashboard(true);
+      setShowLogin(false);
     } catch (error) {
       console.error(error);
       setErrorMessage("Unable to reach the login server. Please try again.");
@@ -46,8 +75,11 @@ const App = () => {
 
   const handleLogout = () => {
     setShowDashboard(false);
-    setShowLogin(false);
+    setShowLogin(true);
     setShowPassword(false);
+    setEmail("");
+    setPassword("");
+    setErrorMessage("");
   };
 
   if (showDashboard) {
@@ -854,6 +886,10 @@ const App = () => {
             <p>
               New to TaskFlow? <a href="#">Start a free trial</a>
             </p>
+          </div>
+
+          <div style={{ marginBottom: 16, fontSize: 14, color: backendStatus === "ok" ? "#0b8457" : backendStatus === "checking" ? "#6b7280" : "#b91c1c" }}>
+            {backendMessage}
           </div>
 
           <div className="oauth-row">
