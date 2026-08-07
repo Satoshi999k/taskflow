@@ -71,13 +71,15 @@ const App = () => {
         return;
       }
 
-      let userLabel =
+      const authName =
         json.profile?.name ||
+        json.display_name ||
         json.user?.user_metadata?.full_name ||
         json.user?.user_metadata?.name ||
+        json.user?.user_metadata?.display_name ||
         json.user?.email;
 
-      setUserName(userLabel || "User");
+      setUserName(authName || "User");
       setShowDashboard(true);
       setShowLogin(false);
     } catch (error) {

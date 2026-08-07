@@ -3,6 +3,16 @@ import { supabaseAdmin } from "./supabaseClient";
 
 const router = Router();
 
+const deriveNameFromEmail = (email: string | undefined | null) => {
+  if (!email) return "User";
+  const local = String(email).split("@")[0];
+  const parts = local.split(/[^a-zA-Z0-9]+/).filter(Boolean);
+  if (parts.length === 0) return local;
+  return parts
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+};
+
 router.get("/api/v1/health", (req, res) => {
   res.json({ status: "ok" });
 });
@@ -38,10 +48,20 @@ router.post("/api/v1/login", async (req, res) => {
     console.warn("Failed to fetch app profile name", profileError);
   }
 
+  const authMetadataName =
+    (data.user?.user_metadata as any)?.full_name ||
+    (data.user?.user_metadata as any)?.name ||
+    (data.user?.user_metadata as any)?.display_name ||
+    null;
+
+  const displayName =
+    profileName || authMetadataName || deriveNameFromEmail(data.user?.email);
+
   return res.json({
     user: data.user,
     session: data.session,
     profile: { name: profileName },
+    display_name: displayName,
   });
 });
 
@@ -52,9 +72,15 @@ router.post("/api/v1/register", async (req, res) => {
     return res.status(400).json({ error: "Email and password are required." });
   }
 
+  const derivedName = deriveNameFromEmail(email);
   const { data, error } = await supabaseAdmin.auth.signUp({
     email,
     password,
+    options: {
+      data: {
+        full_name: derivedName,
+      },
+    },
   });
 
   if (error) {
