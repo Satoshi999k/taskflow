@@ -38,15 +38,32 @@ router.post("/api/v1/login", async (req, res) => {
   }
 
   let profileName: string | null = null;
+  let profileId: string | null = null;
   try {
-    const profileRes = await supabaseAdmin
-      .from("users")
-      .select("name")
-      .eq("id", data.user?.id)
-      .maybeSingle();
+    if (data.user?.id) {
+      const profileRes = await supabaseAdmin
+        .from("users")
+        .select("id,name,email")
+        .eq("id", data.user.id)
+        .maybeSingle();
 
-    if (profileRes.data && (profileRes.data as any).name) {
-      profileName = (profileRes.data as any).name;
+      if (profileRes.data) {
+        profileName = (profileRes.data as any).name || null;
+        profileId = (profileRes.data as any).id || null;
+      }
+    }
+
+    if (!profileName && email) {
+      const profileResByEmail = await supabaseAdmin
+        .from("users")
+        .select("id,name,email")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (profileResByEmail.data) {
+        profileName = (profileResByEmail.data as any).name || null;
+        profileId = (profileResByEmail.data as any).id || null;
+      }
     }
   } catch (profileError) {
     console.warn("Failed to fetch app profile name", profileError);
@@ -61,6 +78,23 @@ router.post("/api/v1/login", async (req, res) => {
       .filter(Boolean)
       .join(" ") ||
     null;
+
+  if (!profileName && authMetadataName && data.user?.id && email) {
+    try {
+      await supabaseAdmin.from("users").upsert(
+        {
+          id: data.user.id,
+          email,
+          name: authMetadataName,
+          password_hash: null,
+        },
+        { onConflict: ["id"] }
+      );
+      profileName = authMetadataName;
+    } catch (insertError) {
+      console.warn("Failed to create missing profile row", insertError);
+    }
+  }
 
   const displayName =
     profileName || authMetadataName || deriveNameFromEmail(data.user?.email);
