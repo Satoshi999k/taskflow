@@ -11,8 +11,11 @@ const App = () => {
   const [backendMessage, setBackendMessage] = useState("Checking login server...");
   const [userName, setUserName] = useState("Alex Rivera");
 
-  const rawApiUrl = import.meta.env.VITE_API_URL;
-  const apiUrl = rawApiUrl?.replace(/\/+$/, "");
+  const rawApiUrl = import.meta.env.VITE_API_URL?.trim();
+  let apiUrl = rawApiUrl?.replace(/\/+$/, "") || "";
+  if (apiUrl && !/^https?:\/\//i.test(apiUrl)) {
+    apiUrl = `https://${apiUrl}`;
+  }
 
   useEffect(() => {
     const checkBackend = async () => {
