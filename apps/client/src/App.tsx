@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import { supabase } from "./supabaseClient";
 
 const App = () => {
   const [showLogin, setShowLogin] = useState(true);
@@ -11,11 +12,8 @@ const App = () => {
   const [backendMessage, setBackendMessage] = useState("Checking login server...");
   const [userName, setUserName] = useState("Alex Rivera");
 
-  const rawApiUrl = import.meta.env.VITE_API_URL?.trim();
-  let apiUrl = rawApiUrl?.replace(/\/+$/, "") || "";
-  if (apiUrl && !/^https?:\/\//i.test(apiUrl)) {
-    apiUrl = `https://${apiUrl}`;
-  }
+  const rawApiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = rawApiUrl?.replace(/\/+$/, "");
 
   useEffect(() => {
     const checkBackend = async () => {
@@ -73,8 +71,21 @@ const App = () => {
         return;
       }
 
-      const userLabel = json.user?.user_metadata?.full_name || json.user?.email || "User";
-      setUserName(userLabel);
+      let userLabel = json.user?.user_metadata?.full_name || json.user?.email;
+
+      // Fallback: try to read a profiles table on Supabase for full name
+      try {
+        if (!userLabel && json.user?.id) {
+          const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", json.user.id).maybeSingle();
+          if (profile && (profile as any).full_name) {
+            userLabel = (profile as any).full_name;
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to fetch profile full_name from Supabase", err);
+      }
+
+      setUserName(userLabel || "User");
       setShowDashboard(true);
       setShowLogin(false);
     } catch (error) {
