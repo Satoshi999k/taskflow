@@ -17,6 +17,7 @@ const App = () => {
   const [userName, setUserName] = useState("Alex Rivera");
 
   const apiUrl = import.meta.env.VITE_API_URL;
+  console.log("VITE_API_URL", apiUrl);
 
   useEffect(() => {
     const checkBackend = async () => {
@@ -28,7 +29,18 @@ const App = () => {
 
       try {
         const response = await fetch(`${apiUrl}/api/v1/health`);
-        if (!response.ok) throw new Error("Health check failed");
+        const text = await response.text();
+        let data: any = null;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          // not JSON
+        }
+
+        if (!response.ok || data?.status !== "ok") {
+          throw new Error(`Health check failed: ${text}`);
+        }
+
         setBackendStatus("ok");
         setBackendMessage("Backend connected");
       } catch (error) {
