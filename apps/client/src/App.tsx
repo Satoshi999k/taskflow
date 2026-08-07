@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 
 const App = () => {
-  const [showLogin, setShowLogin] = useState(true);
+  const [showLogin, setShowLogin] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -163,7 +163,7 @@ const App = () => {
           <div className="sidebar-bottom">
             <div className="user-avatar" />
             <div className="user-meta">
-              <div className="user-name">Alex Rivera</div>
+              <div className="user-name">{userName}</div>
               <div className="user-role">Member</div>
             </div>
             <button className="icon-btn logout-btn" type="button" onClick={handleLogout} aria-label="Log out" title="Log out">
@@ -197,7 +197,7 @@ const App = () => {
           <div className="content">
             <div className="greet-row">
               <div className="greet">
-                <h1 className="display">Good evening, Alex 👋</h1>
+                <h1 className="display">Good evening, {userName} 👋</h1>
                 <p>Here's what's moving across Meridian &amp; Co. today.</p>
               </div>
               <div className="date-pill">Monday, August 3, 2026</div>
