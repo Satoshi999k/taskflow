@@ -7,7 +7,7 @@ import { FormEvent, useState } from "react";
 
 const App = () => {
   const [showLogin, setShowLogin] = useState(false);
-  const [showDashboard, setShowDashboard] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
