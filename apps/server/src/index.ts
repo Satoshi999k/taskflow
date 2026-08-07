@@ -8,18 +8,21 @@ import apiRouter from "./routes";
 
 const app = express();
 const httpServer = createServer(app);
+
+const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+const corsOptions = {
+  origin: clientUrl,
+  methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+};
+
 const io = new Server(httpServer, {
-  cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
-    methods: ["GET", "POST", "PATCH", "DELETE"],
-    credentials: true,
-  },
+  cors: corsOptions,
 });
 
-app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:5173",
-  credentials: true,
-}));
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 app.use(apiRouter);
