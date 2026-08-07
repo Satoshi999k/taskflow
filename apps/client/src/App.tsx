@@ -112,9 +112,9 @@ const App = () => {
     return (
       <div className="app">
         <aside className="sidebar">
-          <div className="logo">
-            <span className="logo-mark" />
-            TaskFlow
+          <div className="logo logo-with-image">
+            <img src="/images/taskflow.png" alt="TaskFlow logo" className="logo-image" />
+            <span className="display">TaskFlow</span>
           </div>
 
           <div className="ws-switcher">

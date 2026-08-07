@@ -120,3 +120,50 @@ create table notifications (
   created_at timestamptz not null default now(),
   constraint notifications_user_fk foreign key (user_id) references users(id) on delete cascade
 );
+
+-- Ensure Supabase Auth inserts can create rows in `public.users` via trigger.
+-- Make `password_hash` nullable so the trigger can insert auth-only accounts.
+alter table public.users alter column password_hash drop not null;
+
+-- Optional debug table to capture trigger errors
+create table if not exists public.auth_trigger_errors (
+  id uuid default gen_random_uuid() primary key,
+  created_at timestamptz default now(),
+  err text,
+  payload jsonb
+);
+
+-- Drop any old trigger/function and create a robust one that uses the correct
+-- auth meta column (`raw_user_meta_data`) and runs as SECURITY DEFINER.
+drop trigger if exists on_auth_user_created on auth.users;
+drop function if exists public.create_profile_from_auth();
+
+create or replace function public.create_profile_from_auth()
+returns trigger
+language plpgsql
+security definer
+as $$
+begin
+  insert into public.users (id, email, name, password_hash, created_at)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data->>'full_name', new.email),
+    null,
+    now()
+  )
+  on conflict (id) do nothing;
+  return new;
+exception when others then
+  insert into public.auth_trigger_errors (err, payload) values (sqlerrm, row_to_json(new));
+  return new;
+end;
+$$;
+
+-- Ensure the function runs with sufficient privileges (owner must exist in your DB)
+alter function public.create_profile_from_auth() owner to postgres;
+
+create trigger on_auth_user_created
+after insert on auth.users
+for each row execute procedure public.create_profile_from_auth();
+
