@@ -9,7 +9,7 @@ import apiRouter from "./routes";
 const app = express();
 const httpServer = createServer(app);
 
-const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+const clientUrl = process.env.CLIENT_URL || "https://taskflow-flax-psi.vercel.app/";
 const corsOptions = {
   origin: true,
   methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],

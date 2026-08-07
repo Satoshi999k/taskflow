@@ -11,7 +11,8 @@ const App = () => {
   const [backendMessage, setBackendMessage] = useState("Checking login server...");
   const [userName, setUserName] = useState("Alex Rivera");
 
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const rawApiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = rawApiUrl?.replace(/\/+$/, "");
 
   useEffect(() => {
     const checkBackend = async () => {
