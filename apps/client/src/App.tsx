@@ -52,10 +52,18 @@ const App = () => {
         body: JSON.stringify({ email, password }),
       });
 
-      const json = await response.json();
+      const text = await response.text();
+      let json: any = null;
+
+      try {
+        json = JSON.parse(text);
+      } catch {
+        // ignore invalid JSON
+      }
 
       if (!response.ok) {
-        setErrorMessage(json.error || "Login failed");
+        const message = json?.error || json?.message || text || `Login failed (${response.status})`;
+        setErrorMessage(message);
         return;
       }
 
@@ -65,7 +73,8 @@ const App = () => {
       setShowLogin(false);
     } catch (error) {
       console.error(error);
-      setErrorMessage("Unable to reach the login server. Please try again.");
+      const message = error instanceof Error ? error.message : String(error);
+      setErrorMessage(`Login request failed: ${message}`);
     }
   };
 
