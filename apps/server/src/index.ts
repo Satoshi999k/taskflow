@@ -11,7 +11,7 @@ const httpServer = createServer(app);
 
 const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
 const corsOptions = {
-  origin: clientUrl,
+  origin: true,
   methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
@@ -23,9 +23,16 @@ const io = new Server(httpServer, {
 
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
-app.use(express.json());
+app.use(express.json({ strict: false }));
 app.use(cookieParser());
 app.use(apiRouter);
+
+app.use((err: any, req: any, res: any, next: any) => {
+  if (err?.type === "entity.parse.failed") {
+    return res.status(400).json({ error: "Invalid JSON body" });
+  }
+  return res.status(err?.status || 500).json({ error: err?.message || "Internal server error" });
+});
 
 io.of("/board").on("connection", (socket) => {
   socket.on("join", (boardId) => {
