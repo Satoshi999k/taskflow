@@ -74,9 +74,15 @@ const App = () => {
       const authName =
         json.profile?.name ||
         json.display_name ||
+        json.user?.raw_user_meta_data?.full_name ||
+        json.user?.raw_user_meta_data?.name ||
+        json.user?.raw_user_meta_data?.display_name ||
         json.user?.user_metadata?.full_name ||
         json.user?.user_metadata?.name ||
         json.user?.user_metadata?.display_name ||
+        (json.user?.user_metadata?.first_name && json.user?.user_metadata?.last_name
+          ? `${json.user.user_metadata.first_name} ${json.user.user_metadata.last_name}`
+          : undefined) ||
         json.user?.email;
 
       setUserName(authName || "User");

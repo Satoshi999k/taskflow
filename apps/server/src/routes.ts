@@ -6,8 +6,12 @@ const router = Router();
 const deriveNameFromEmail = (email: string | undefined | null) => {
   if (!email) return "User";
   const local = String(email).split("@")[0];
-  const parts = local.split(/[^a-zA-Z0-9]+/).filter(Boolean);
-  if (parts.length === 0) return local;
+  const withoutDigits = local.replace(/\d+$/, "");
+  const raw = withoutDigits || local;
+  const parts = raw.split(/[^a-zA-Z0-9]+/).filter(Boolean);
+  if (parts.length === 0) {
+    return raw.charAt(0).toUpperCase() + raw.slice(1);
+  }
   return parts
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
@@ -48,10 +52,14 @@ router.post("/api/v1/login", async (req, res) => {
     console.warn("Failed to fetch app profile name", profileError);
   }
 
+  const authMetadata = (data.user as any)?.user_metadata || (data.user as any)?.raw_user_meta_data || {};
   const authMetadataName =
-    (data.user?.user_metadata as any)?.full_name ||
-    (data.user?.user_metadata as any)?.name ||
-    (data.user?.user_metadata as any)?.display_name ||
+    authMetadata.full_name ||
+    authMetadata.name ||
+    authMetadata.display_name ||
+    [authMetadata.first_name, authMetadata.last_name]
+      .filter(Boolean)
+      .join(" ") ||
     null;
 
   const displayName =
