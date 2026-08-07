@@ -72,26 +72,10 @@ const App = () => {
       }
 
       let userLabel =
+        json.profile?.name ||
         json.user?.user_metadata?.full_name ||
         json.user?.user_metadata?.name ||
         json.user?.email;
-
-      // Fallback: try to read the app users table on Supabase for the display name.
-      try {
-        if (json.user?.id) {
-          const { data: appUser } = await supabase
-            .from("users")
-            .select("name")
-            .eq("id", json.user.id)
-            .maybeSingle();
-
-          if (appUser && (appUser as any).name) {
-            userLabel = (appUser as any).name;
-          }
-        }
-      } catch (err) {
-        console.warn("Failed to fetch app user name from Supabase", err);
-      }
 
       setUserName(userLabel || "User");
       setShowDashboard(true);
