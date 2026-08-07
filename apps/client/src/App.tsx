@@ -59,7 +59,14 @@ const App = () => {
 
       if (!response.ok) {
         const message = json?.error || json?.message || text || `Login failed (${response.status})`;
-        setErrorMessage(message);
+        setErrorMessage(`${message} — ${response.status} ${response.statusText} @ ${response.url}`);
+        console.error("Login response", {
+          status: response.status,
+          url: response.url,
+          body: text,
+          json,
+          headers: Array.from(response.headers.entries()),
+        });
         return;
       }
 
