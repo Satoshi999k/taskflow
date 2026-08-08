@@ -103,19 +103,15 @@ router.post("/api/v1/login", async (req, res) => {
   try {
     if (data.user?.id) {
       const authUserId = data.user.id;
-      const candidateUserIds = [profileId, authUserId].filter((id): id is string => Boolean(id));
-      let membershipRes;
+      const candidateUserIds = Array.from(new Set([profileId, authUserId].filter((id): id is string => Boolean(id))));
+      let membershipRes: any = null;
 
-      for (const candidateUserId of candidateUserIds) {
+      if (candidateUserIds.length > 0) {
         membershipRes = await supabaseAdmin
           .from("workspace_members")
           .select("workspace_id,role")
-          .eq("user_id", candidateUserId)
+          .in("user_id", candidateUserIds)
           .maybeSingle();
-
-        if (membershipRes.data && !membershipRes.error) {
-          break;
-        }
       }
 
       if ((!membershipRes?.data || membershipRes.error) && email) {
@@ -125,11 +121,12 @@ router.post("/api/v1/login", async (req, res) => {
           .eq("email", email)
           .maybeSingle();
 
-        if (alternateProfile.data?.id && !candidateUserIds.includes(alternateProfile.data.id)) {
+        const alternateId = alternateProfile.data?.id;
+        if (alternateId && !candidateUserIds.includes(alternateId)) {
           membershipRes = await supabaseAdmin
             .from("workspace_members")
             .select("workspace_id,role")
-            .eq("user_id", alternateProfile.data.id)
+            .eq("user_id", alternateId)
             .maybeSingle();
         }
       }
