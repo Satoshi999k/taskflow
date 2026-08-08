@@ -11,6 +11,7 @@ const App = () => {
   const [backendStatus, setBackendStatus] = useState<"checking" | "ok" | "error">("checking");
   const [backendMessage, setBackendMessage] = useState("Checking login server...");
   const [userName, setUserName] = useState("User");
+  const [userRole, setUserRole] = useState("Admin");
   const [workspaceName, setWorkspaceName] = useState("TaskFlow");
   const [activePage, setActivePage] = useState<"home" | "boards" | "audit" | "members" | "billing" | "settings">("home");
   const [showNewBoardModal, setShowNewBoardModal] = useState(false);
@@ -57,15 +58,15 @@ const App = () => {
 
       const { data: membershipData, error: membershipError } = await supabase
         .from("workspace_members")
-        .select("workspaceId")
-        .eq("userId", userId)
+        .select("workspace_id")
+        .eq("user_id", userId)
         .single();
 
-      if (!membershipError && membershipData?.workspaceId) {
+      if (!membershipError && membershipData?.workspace_id) {
         const { data: workspaceData, error: workspaceError } = await supabase
           .from("workspaces")
           .select("name")
-          .eq("id", membershipData.workspaceId)
+          .eq("id", membershipData.workspace_id)
           .single();
 
         if (!workspaceError && workspaceData?.name) {
@@ -77,9 +78,10 @@ const App = () => {
 
     const storedName = localStorage.getItem("taskflowUserName");
     const storedWorkspace = localStorage.getItem("taskflowWorkspaceName");
+    const storedRole = localStorage.getItem("taskflowUserRole");
     if (storedName) setUserName(storedName);
     if (storedWorkspace) setWorkspaceName(storedWorkspace);
-
+    if (storedRole) setUserRole(storedRole === "OWNER" ? "Owner" : storedRole.charAt(0) + storedRole.slice(1).toLowerCase());
     checkBackend();
     loadSupabaseProfile();
   }, [apiUrl]);
@@ -135,8 +137,11 @@ const App = () => {
       setUserName(resolvedName);
       const resolvedWorkspace = json.workspace?.name || "Meridian & Co.";
       setWorkspaceName(resolvedWorkspace);
+      const resolvedRole = json.profile?.role || "MEMBER";
+      setUserRole(resolvedRole === "OWNER" ? "Owner" : resolvedRole.charAt(0) + resolvedRole.slice(1).toLowerCase());
       localStorage.setItem("taskflowUserName", resolvedName);
       localStorage.setItem("taskflowWorkspaceName", resolvedWorkspace);
+      localStorage.setItem("taskflowUserRole", resolvedRole);
       setShowDashboard(true);
       setShowLogin(false);
     } catch (error) {
@@ -735,7 +740,7 @@ const App = () => {
             <div className="user-avatar" />
             <div className="user-meta">
               <div className="user-name">{userName}</div>
-              <div className="user-role">Admin</div>
+              <div className="user-role">{userRole}</div>
             </div>
             <button className="icon-btn logout-btn" type="button" onClick={handleLogout} aria-label="Log out" title="Log out">
               <span className="material-symbols-outlined">logout</span>

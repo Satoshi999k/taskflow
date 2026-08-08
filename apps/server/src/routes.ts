@@ -100,23 +100,25 @@ router.post("/api/v1/login", async (req, res) => {
     profileName || authMetadataName || deriveNameFromEmail(data.user?.email);
 
   let workspaceName: string | null = null;
+  let membershipRole: string | null = null;
   try {
     if (data.user?.id) {
       const membershipRes = await supabaseAdmin
         .from("workspace_members")
-        .select("workspaceId,role")
-        .eq("userId", data.user.id)
+        .select("workspace_id,role")
+        .eq("user_id", data.user.id)
         .limit(1)
         .maybeSingle();
 
       const membership = membershipRes.data as any;
-      const workspaceId = membership?.workspaceId;
-      const role = membership?.role as string | undefined;
-      const allowedRoles = ["OWNER", "ADMIN"];
+      const workspaceId = membership?.workspace_id;
+      const role = membership?.role as string | null;
 
-      if (!membership || !workspaceId || !allowedRoles.includes(role || "")) {
-        return res.status(403).json({ error: "Access denied. Only workspace admins may sign in here." });
+      if (!membership || !workspaceId) {
+        return res.status(403).json({ error: "Access denied. User is not a member of any workspace." });
       }
+
+      membershipRole = role || "MEMBER";
 
       const workspaceRes = await supabaseAdmin
         .from("workspaces")
@@ -134,7 +136,7 @@ router.post("/api/v1/login", async (req, res) => {
   return res.json({
     user: data.user,
     session: data.session,
-    profile: { name: profileName },
+    profile: { id: profileId, name: profileName, role: membershipRole },
     display_name: displayName,
     workspace: { name: workspaceName },
   });
