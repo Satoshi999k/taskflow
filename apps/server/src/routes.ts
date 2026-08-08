@@ -88,7 +88,7 @@ router.post("/api/v1/login", async (req, res) => {
           name: authMetadataName,
           password_hash: null,
         },
-        { onConflict: ["id"] }
+        { onConflict: "id" }
       );
       profileName = authMetadataName;
     } catch (insertError) {
@@ -96,20 +96,27 @@ router.post("/api/v1/login", async (req, res) => {
     }
   }
 
-  const displayName =
-    profileName || authMetadataName || deriveNameFromEmail(data.user?.email);
-
   let workspaceName: string | null = null;
   let membershipRole: string | null = null;
   try {
     if (data.user?.id) {
       const membershipUserId = profileId || data.user.id;
-      const membershipRes = await supabaseAdmin
-        .from("workspace_members")
-        .select("workspace_id,role")
-        .eq("user_id", membershipUserId)
-        .limit(1)
-        .maybeSingle();
+      let membershipRes;
+      if (membershipUserId && data.user.id && membershipUserId !== data.user.id) {
+        membershipRes = await supabaseAdmin
+          .from("workspace_members")
+          .select("workspace_id,role")
+          .or(`user_id.eq.${membershipUserId},user_id.eq.${data.user.id}`)
+          .limit(1)
+          .maybeSingle();
+      } else {
+        membershipRes = await supabaseAdmin
+          .from("workspace_members")
+          .select("workspace_id,role")
+          .eq("user_id", membershipUserId || data.user.id)
+          .limit(1)
+          .maybeSingle();
+      }
 
       const membership = membershipRes.data as any;
       const workspaceId = membership?.workspace_id;
