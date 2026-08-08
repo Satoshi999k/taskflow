@@ -110,8 +110,7 @@ router.post("/api/v1/login", async (req, res) => {
         membershipRes = await supabaseAdmin
           .from("workspace_members")
           .select("workspace_id,role")
-          .in("user_id", candidateUserIds)
-          .maybeSingle();
+          .in("user_id", candidateUserIds);
       }
 
       if ((!membershipRes?.data || membershipRes.error) && email) {
@@ -126,16 +125,15 @@ router.post("/api/v1/login", async (req, res) => {
           membershipRes = await supabaseAdmin
             .from("workspace_members")
             .select("workspace_id,role")
-            .eq("user_id", alternateId)
-            .maybeSingle();
+            .eq("user_id", alternateId);
         }
       }
 
-      const membership = membershipRes?.data as any;
-      const workspaceId = membership?.workspace_id;
-      const role = membership?.role as string | null;
+      const membershipData = Array.isArray(membershipRes?.data) ? membershipRes.data[0] : membershipRes?.data;
+      const workspaceId = (membershipData as any)?.workspace_id;
+      const role = (membershipData as any)?.role as string | null;
 
-      if (!membership || !workspaceId) {
+      if (!membershipData || !workspaceId) {
         console.warn("Workspace membership lookup failed", {
           authUserId,
           profileId,
