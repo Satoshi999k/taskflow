@@ -104,22 +104,28 @@ router.post("/api/v1/login", async (req, res) => {
     if (data.user?.id) {
       const membershipRes = await supabaseAdmin
         .from("workspace_members")
-        .select("workspaceId")
+        .select("workspaceId,role")
         .eq("userId", data.user.id)
         .limit(1)
         .maybeSingle();
 
-      const workspaceId = (membershipRes.data as any)?.workspaceId;
-      if (workspaceId) {
-        const workspaceRes = await supabaseAdmin
-          .from("workspaces")
-          .select("name")
-          .eq("id", workspaceId)
-          .limit(1)
-          .maybeSingle();
+      const membership = membershipRes.data as any;
+      const workspaceId = membership?.workspaceId;
+      const role = membership?.role as string | undefined;
+      const allowedRoles = ["OWNER", "ADMIN"];
 
-        workspaceName = (workspaceRes.data as any)?.name || null;
+      if (!membership || !workspaceId || !allowedRoles.includes(role || "")) {
+        return res.status(403).json({ error: "Access denied. Only workspace admins may sign in here." });
       }
+
+      const workspaceRes = await supabaseAdmin
+        .from("workspaces")
+        .select("name")
+        .eq("id", workspaceId)
+        .limit(1)
+        .maybeSingle();
+
+      workspaceName = (workspaceRes.data as any)?.name || null;
     }
   } catch (workspaceError) {
     console.warn("Failed to fetch workspace name", workspaceError);
