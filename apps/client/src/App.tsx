@@ -10,8 +10,8 @@ const App = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [backendStatus, setBackendStatus] = useState<"checking" | "ok" | "error">("checking");
   const [backendMessage, setBackendMessage] = useState("Checking login server...");
-  const [userName, setUserName] = useState("Alex Rivera");
-  const [workspaceName, setWorkspaceName] = useState("Meridian & Co.");
+  const [userName, setUserName] = useState("User");
+  const [workspaceName, setWorkspaceName] = useState("TaskFlow");
   const [activePage, setActivePage] = useState<"home" | "boards" | "audit" | "members" | "billing" | "settings">("home");
   const [showNewBoardModal, setShowNewBoardModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -39,7 +39,49 @@ const App = () => {
       }
     };
 
+    const loadSupabaseProfile = async () => {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData?.session?.user?.id) return;
+
+      const userId = sessionData.session.user.id;
+      const { data: profileData, error: profileError } = await supabase
+        .from("users")
+        .select("name")
+        .eq("id", userId)
+        .single();
+
+      if (!profileError && profileData?.name) {
+        setUserName(profileData.name);
+        localStorage.setItem("taskflowUserName", profileData.name);
+      }
+
+      const { data: membershipData, error: membershipError } = await supabase
+        .from("workspace_members")
+        .select("workspaceId")
+        .eq("userId", userId)
+        .single();
+
+      if (!membershipError && membershipData?.workspaceId) {
+        const { data: workspaceData, error: workspaceError } = await supabase
+          .from("workspaces")
+          .select("name")
+          .eq("id", membershipData.workspaceId)
+          .single();
+
+        if (!workspaceError && workspaceData?.name) {
+          setWorkspaceName(workspaceData.name);
+          localStorage.setItem("taskflowWorkspaceName", workspaceData.name);
+        }
+      }
+    };
+
+    const storedName = localStorage.getItem("taskflowUserName");
+    const storedWorkspace = localStorage.getItem("taskflowWorkspaceName");
+    if (storedName) setUserName(storedName);
+    if (storedWorkspace) setWorkspaceName(storedWorkspace);
+
     checkBackend();
+    loadSupabaseProfile();
   }, [apiUrl]);
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -89,8 +131,12 @@ const App = () => {
           : undefined) ||
         json.user?.email;
 
-      setUserName(authName || "User");
-      setWorkspaceName(json.workspace?.name || "Meridian & Co.");
+      const resolvedName = authName || "User";
+      setUserName(resolvedName);
+      const resolvedWorkspace = json.workspace?.name || "Meridian & Co.";
+      setWorkspaceName(resolvedWorkspace);
+      localStorage.setItem("taskflowUserName", resolvedName);
+      localStorage.setItem("taskflowWorkspaceName", resolvedWorkspace);
       setShowDashboard(true);
       setShowLogin(false);
     } catch (error) {
@@ -111,6 +157,8 @@ const App = () => {
     setEmail("");
     setPassword("");
     setErrorMessage("");
+    localStorage.removeItem("taskflowUserName");
+    localStorage.removeItem("taskflowWorkspaceName");
   };
 
   const handleOpenNewBoard = () => setShowNewBoardModal(true);
@@ -662,7 +710,7 @@ const App = () => {
 
           <div className="ws-switcher">
             <div className="ws-icon" />
-            <div className="ws-name">Meridian &amp; Co.</div>
+            <div className="ws-name">{workspaceName}</div>
             <span className="material-symbols-outlined">unfold_more</span>
           </div>
 
