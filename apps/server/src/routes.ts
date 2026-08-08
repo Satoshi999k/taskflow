@@ -96,6 +96,8 @@ router.post("/api/v1/login", async (req, res) => {
     }
   }
 
+  const displayName = profileName || authMetadataName || deriveNameFromEmail(data.user?.email);
+
   let workspaceName: string | null = null;
   let membershipRole: string | null = null;
   try {
