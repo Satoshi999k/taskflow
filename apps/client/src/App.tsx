@@ -3,7 +3,7 @@ import { supabase } from "./supabaseClient";
 
 const App = () => {
   const [showLogin, setShowLogin] = useState(false);
-  const [showDashboard, setShowDashboard] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -653,8 +653,8 @@ const App = () => {
     return (
       <div className="app">
         <aside className="sidebar">
-          <div className="logo logo-with-image">
-            <img src="/images/taskflow.png" alt="TaskFlow logo" className="logo-image" />
+          <div className="logo" data-nav="home" style={{ cursor: "pointer" }} onClick={() => setActivePage("home")}> 
+            <span className="logo-mark" />
             <span className="display">TaskFlow</span>
           </div>
 
