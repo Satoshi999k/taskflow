@@ -653,8 +653,8 @@ const App = () => {
     return (
       <div className="app">
         <aside className="sidebar">
-          <div className="logo" data-nav="home" style={{ cursor: "pointer" }} onClick={() => setActivePage("home")}> 
-            <span className="logo-mark" />
+          <div className="logo logo-with-image" data-nav="home" style={{ cursor: "pointer" }} onClick={() => setActivePage("home")}>
+            <img src="/images/taskflow.png" alt="TaskFlow logo" className="logo-image" />
             <span className="display">TaskFlow</span>
           </div>
 
