@@ -114,18 +114,28 @@ router.post("/api/v1/login", async (req, res) => {
       }
 
       if ((!membershipRes?.data || membershipRes.error) && email) {
-        const alternateProfile = await supabaseAdmin
-          .from("users")
-          .select("id")
-          .eq("email", email)
+        const membershipByEmail = await supabaseAdmin
+          .from("workspace_members")
+          .select("workspace_id,role,user(id,email)")
+          .eq("user.email", email)
           .maybeSingle();
 
-        const alternateId = alternateProfile.data?.id;
-        if (alternateId && !candidateUserIds.includes(alternateId)) {
-          membershipRes = await supabaseAdmin
-            .from("workspace_members")
-            .select("workspace_id,role")
-            .eq("user_id", alternateId);
+        if (membershipByEmail.data && !membershipByEmail.error) {
+          membershipRes = membershipByEmail;
+        } else {
+          const alternateProfile = await supabaseAdmin
+            .from("users")
+            .select("id")
+            .eq("email", email)
+            .maybeSingle();
+
+          const alternateId = alternateProfile.data?.id;
+          if (alternateId && !candidateUserIds.includes(alternateId)) {
+            membershipRes = await supabaseAdmin
+              .from("workspace_members")
+              .select("workspace_id,role")
+              .eq("user_id", alternateId);
+          }
         }
       }
 
