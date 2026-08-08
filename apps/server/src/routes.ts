@@ -108,19 +108,24 @@ router.post("/api/v1/login", async (req, res) => {
 });
 
 router.post("/api/v1/register", async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, name, role } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password are required." });
   }
 
-  const derivedName = deriveNameFromEmail(email);
+  const derivedName = name?.trim() ? String(name).trim() : deriveNameFromEmail(email);
+  const requestedRole = String(role || "MEMBER").toUpperCase();
+  const validRoles = ["OWNER", "ADMIN", "MEMBER", "VIEWER"];
+  const normalizedRole = validRoles.includes(requestedRole) ? requestedRole : "MEMBER";
+
   const { data, error } = await supabaseAdmin.auth.signUp({
     email,
     password,
     options: {
       data: {
         full_name: derivedName,
+        role: normalizedRole,
       },
     },
   });
@@ -129,7 +134,11 @@ router.post("/api/v1/register", async (req, res) => {
     return res.status(400).json({ error: error.message });
   }
 
-  return res.json({ user: data.user, session: data.session });
+  return res.json({
+    user: data.user,
+    session: data.session,
+    profile: { name: derivedName, role: normalizedRole },
+  });
 });
 
 export default router;

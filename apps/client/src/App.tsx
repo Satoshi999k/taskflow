@@ -11,6 +11,9 @@ const App = () => {
   const [backendStatus, setBackendStatus] = useState<"checking" | "ok" | "error">("checking");
   const [backendMessage, setBackendMessage] = useState("Checking login server...");
   const [userName, setUserName] = useState("Alex Rivera");
+  const [activePage, setActivePage] = useState<"home" | "boards" | "audit" | "members" | "billing" | "settings">("home");
+  const [showNewBoardModal, setShowNewBoardModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   const rawApiUrl = import.meta.env.VITE_API_URL;
   const apiUrl = rawApiUrl?.replace(/\/+$/, "");
@@ -108,7 +111,545 @@ const App = () => {
     setErrorMessage("");
   };
 
+  const handleOpenNewBoard = () => setShowNewBoardModal(true);
+  const handleCloseNewBoard = () => setShowNewBoardModal(false);
+  const handleOpenInvite = () => setShowInviteModal(true);
+  const handleCloseInvite = () => setShowInviteModal(false);
+
+  const renderAdminContent = () => {
+    switch (activePage) {
+      case "boards":
+        return (
+          <div className="view">
+            <div className="page-head">
+              <div>
+                <h1 className="display">Boards</h1>
+                <p>Every board across Meridian &amp; Co. — 6 total.</p>
+              </div>
+              <button className="btn-new" type="button" onClick={handleOpenNewBoard}>
+                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>add</span>New board
+              </button>
+            </div>
+
+            <div className="filter-row">
+              <div className="filter-pill active">All boards</div>
+              <div className="filter-pill">Owned by me</div>
+              <div className="filter-pill">Shared with me</div>
+              <div className="filter-pill">Archived</div>
+            </div>
+
+            <div className="boards-grid-full">
+              {[
+                {
+                  title: "Product Roadmap",
+                  sub: "18 cards · 3 lists",
+                  progress: "62%",
+                  color: "var(--coral)",
+                  icon: "map",
+                  avatars: ["var(--violet)", "var(--teal)", "var(--amber)"],
+                  updated: "Updated 12m ago",
+                },
+                {
+                  title: "Marketing Campaign",
+                  sub: "24 cards · 4 lists",
+                  progress: "38%",
+                  color: "var(--teal)",
+                  icon: "campaign",
+                  avatars: ["var(--coral)", "var(--violet)"],
+                  updated: "Updated 1h ago",
+                },
+                {
+                  title: "Sprint 14",
+                  sub: "31 cards · 5 lists",
+                  progress: "81%",
+                  color: "var(--violet)",
+                  icon: "bolt",
+                  avatars: ["var(--teal)", "var(--coral)", "var(--amber)"],
+                  updated: "Updated 3h ago",
+                },
+                {
+                  title: "Client Onboarding",
+                  sub: "12 cards · 3 lists",
+                  progress: "20%",
+                  color: "var(--amber)",
+                  icon: "handshake",
+                  avatars: ["var(--violet)"],
+                  updated: "Updated yesterday",
+                },
+                {
+                  title: "Billing & Finance Ops",
+                  sub: "9 cards · 3 lists",
+                  progress: "55%",
+                  color: "var(--teal)",
+                  icon: "payments",
+                  avatars: ["var(--coral)", "var(--amber)"],
+                  updated: "Updated 2 days ago",
+                },
+                {
+                  title: "Hiring Pipeline",
+                  sub: "15 cards · 4 lists",
+                  progress: "44%",
+                  color: "var(--coral)",
+                  icon: "groups",
+                  avatars: ["var(--violet)", "var(--teal)"],
+                  updated: "Updated 4 days ago",
+                },
+              ].map((board) => (
+                <div key={board.title} className="board-card">
+                  <div className="board-card-top">
+                    <div className="board-icon" style={{ background: board.color }}>
+                      <span className="material-symbols-outlined">{board.icon}</span>
+                    </div>
+                    <span className="material-symbols-outlined" style={{ color: "var(--ink-faint)", fontSize: "18px" }}>more_horiz</span>
+                  </div>
+                  <h3>{board.title}</h3>
+                  <div className="sub">{board.sub}</div>
+                  <div className="board-progress">
+                    <div className="board-progress-fill" style={{ width: board.progress, background: board.color }} />
+                  </div>
+                  <div className="board-bottom">
+                    <div className="avatar-stack">
+                      {board.avatars.map((color) => (
+                        <div key={color} className="a" style={{ background: color }} />
+                      ))}
+                    </div>
+                    <div className="board-meta">{board.updated}</div>
+                  </div>
+                </div>
+              ))}
+
+              <div className="new-board-card" onClick={handleOpenNewBoard}>
+                <span className="material-symbols-outlined">add</span>
+                <span className="label">Create new board</span>
+              </div>
+            </div>
+          </div>
+        );
+      case "audit":
+        return (
+          <div className="view">
+            <div className="page-head">
+              <div>
+                <h1 className="display">Audit log</h1>
+                <p>Every permission, membership, and workspace change — timestamped and attributable.</p>
+              </div>
+            </div>
+            <div className="filter-row">
+              <div className="filter-pill active">All events</div>
+              <div className="filter-pill">Role changes</div>
+              <div className="filter-pill">Invites</div>
+              <div className="filter-pill">Board changes</div>
+            </div>
+            <div className="card-list">
+              {[
+                {
+                  actor: "Priya Nandakumar",
+                  action: "changed Marcus Webb's role from Member to Viewer",
+                  type: "Role change",
+                  typeBackground: "#EFECFF",
+                  typeColor: "var(--violet)",
+                  time: "3 hours ago",
+                },
+                {
+                  actor: "Sofia Reyes",
+                  action: "invited jordan@meridianco.com and lena@meridianco.com",
+                  type: "Invite sent",
+                  typeBackground: "#E3F7F4",
+                  typeColor: "var(--teal)",
+                  time: "Yesterday, 4:12 PM",
+                },
+                {
+                  actor: "Priya Nandakumar",
+                  action: "archived board Q1 Retro",
+                  type: "Board change",
+                  typeBackground: "#FFEDEA",
+                  typeColor: "var(--coral-deep)",
+                  time: "2 days ago",
+                },
+                {
+                  actor: "Sofia Reyes",
+                  action: "removed Jamie Ortiz from workspace",
+                  type: "Membership",
+                  typeBackground: "#FFEDEA",
+                  typeColor: "var(--coral-deep)",
+                  time: "4 days ago",
+                },
+                {
+                  actor: "Priya Nandakumar",
+                  action: "enabled SSO for Meridian & Co.",
+                  type: "Security",
+                  typeBackground: "#FFF3D6",
+                  typeColor: "#B8860B",
+                  time: "1 week ago",
+                },
+                {
+                  actor: "Sofia Reyes",
+                  action: "created board Client Onboarding",
+                  type: "Board change",
+                  typeBackground: "#E3F7F4",
+                  typeColor: "var(--teal)",
+                  time: "1 week ago",
+                },
+              ].map((item) => (
+                <div key={`${item.actor}-${item.action}`} className="audit-row">
+                  <div className="audit-actor">{item.actor}</div>
+                  <div>{item.action}</div>
+                  <div>
+                    <span className="audit-type" style={{ background: item.typeBackground, color: item.typeColor }}>{item.type}</span>
+                  </div>
+                  <div className="audit-time">{item.time}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      case "members":
+        return (
+          <div className="view">
+            <div className="page-head">
+              <div>
+                <h1 className="display">Members</h1>
+                <p>6 members in Meridian &amp; Co. — you can invite, remove, and change roles.</p>
+              </div>
+              <button className="btn-new" type="button" onClick={handleOpenInvite}>
+                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>person_add</span>Invite member
+              </button>
+            </div>
+            <div className="card-list">
+              {[
+                {
+                  name: "Sofia Reyes",
+                  email: "sofia@meridianco.com",
+                  avatar: "linear-gradient(135deg, var(--coral), var(--amber))",
+                  status: "Online now",
+                  role: "Owner",
+                },
+                {
+                  name: "Priya Nandakumar",
+                  email: "priya@meridianco.com",
+                  avatar: "linear-gradient(135deg, var(--coral), var(--amber))",
+                  status: "Online now",
+                  role: "Admin",
+                },
+                {
+                  name: "Alex Rivera",
+                  email: "alex@meridianco.com",
+                  avatar: "linear-gradient(135deg, var(--coral), var(--amber))",
+                  status: "Active 5m ago",
+                  role: "Member",
+                },
+                {
+                  name: "David Chen",
+                  email: "david@meridianco.com",
+                  avatar: "linear-gradient(135deg, var(--coral), var(--amber))",
+                  status: "Active 1h ago",
+                  role: "Member",
+                },
+                {
+                  name: "Amara Okafor",
+                  email: "amara@meridianco.com",
+                  avatar: "linear-gradient(135deg, var(--coral), var(--amber))",
+                  status: "Active yesterday",
+                  role: "Member",
+                },
+                {
+                  name: "Marcus Webb",
+                  email: "marcus@meridianco.com",
+                  avatar: "linear-gradient(135deg, var(--coral), var(--amber))",
+                  status: "Active 3 days ago",
+                  role: "Viewer",
+                },
+              ].map((member) => (
+                <div key={member.email} className="member-row">
+                  <div className="member-avatar" style={{ background: member.avatar }} />
+                  <div style={{ flex: 1 }}>
+                    <div className="member-name">{member.name}</div>
+                    <div className="member-email">{member.email}</div>
+                  </div>
+                  <div className="member-status">{member.status}</div>
+                  <select className="role-select" value={member.role} onChange={() => undefined}>
+                    <option>Owner</option>
+                    <option>Admin</option>
+                    <option>Member</option>
+                    <option>Viewer</option>
+                  </select>
+                  <span className="material-symbols-outlined remove-icon" title="Remove member">person_remove</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      case "billing":
+        return (
+          <div className="view">
+            <div className="page-head">
+              <div>
+                <h1 className="display">Billing & plan</h1>
+                <p>Manage your subscription and view invoice history.</p>
+              </div>
+            </div>
+
+            <div className="plan-card">
+              <div>
+                <h3>Team plan</h3>
+                <p>$9 / user / month · 6 of 25 seats used · renews Sep 3, 2026</p>
+              </div>
+              <button className="btn-new" type="button" style={{ background: "#fff", color: "var(--ink)" }}>
+                Upgrade plan
+              </button>
+            </div>
+
+            <div className="settings-card">
+              <h3>Seat usage</h3>
+              <div className="desc">6 of 25 seats used on the Team plan.</div>
+              <div className="usage-bar"><div className="usage-fill" style={{ width: "24%" }} /></div>
+              <div style={{ fontSize: "12.5px", color: "var(--ink-soft)" }}>24% of included seats used</div>
+            </div>
+
+            <div className="settings-card">
+              <h3>Invoice history</h3>
+              <div className="desc">Download past invoices for your records.</div>
+              <div className="card-list" style={{ border: "1px solid var(--line-soft)" }}>
+                <div className="invoice-row"><span>July 2026</span><span>$54.00</span><span className="invoice-status">Paid</span><span className="material-symbols-outlined" style={{ cursor: "pointer", color: "var(--ink-faint)" }}>download</span></div>
+                <div className="invoice-row"><span>June 2026</span><span>$54.00</span><span className="invoice-status">Paid</span><span className="material-symbols-outlined" style={{ cursor: "pointer", color: "var(--ink-faint)" }}>download</span></div>
+                <div className="invoice-row"><span>May 2026</span><span>$45.00</span><span className="invoice-status">Paid</span><span className="material-symbols-outlined" style={{ cursor: "pointer", color: "var(--ink-faint)" }}>download</span></div>
+              </div>
+            </div>
+          </div>
+        );
+      case "settings":
+        return (
+          <div className="view">
+            <div className="page-head">
+              <div>
+                <h1 className="display">Settings</h1>
+                <p>Manage your workspace, security, and preferences.</p>
+              </div>
+            </div>
+
+            <div className="settings-layout">
+              <div className="settings-nav">
+                <div className="s-item">General</div>
+                <div className="s-item">Security & SSO</div>
+                <div className="s-item active">Notifications</div>
+                <div className="s-item">Billing & plan</div>
+                <div className="s-item">Danger zone</div>
+              </div>
+
+              <div>
+                <div className="settings-card">
+                  <h3>Workspace details</h3>
+                  <div className="desc">Basic information about Meridian &amp; Co.'s workspace.</div>
+                  <div className="s-field">
+                    <label>Workspace name</label>
+                    <input type="text" value="Meridian & Co." readOnly />
+                  </div>
+                  <div className="s-field">
+                    <label>Workspace URL</label>
+                    <input type="text" value="app.taskflow.io/w/meridian-co" readOnly />
+                  </div>
+                  <div className="s-field">
+                    <label>Default timezone</label>
+                    <select>
+                      <option>(UTC+08:00) Manila, Singapore, Perth</option>
+                    </select>
+                  </div>
+                  <button className="btn-new" type="button" style={{ marginTop: 6 }}>Save changes</button>
+                </div>
+
+                <div className="settings-card">
+                  <h3>Notification preferences</h3>
+                  <div className="desc">Choose what you get notified about.</div>
+                  <div className="toggle-row">
+                    <div>
+                      <div className="label">Task assignments</div>
+                      <div className="sub">When you're assigned to a card</div>
+                    </div>
+                    <div className="switch on" />
+                  </div>
+                  <div className="toggle-row">
+                    <div>
+                      <div className="label">Comments & mentions</div>
+                      <div className="sub">When someone comments or @mentions you</div>
+                    </div>
+                    <div className="switch on" />
+                  </div>
+                  <div className="toggle-row">
+                    <div>
+                      <div className="label">Due date reminders</div>
+                      <div className="sub">24 hours before a card is due</div>
+                    </div>
+                    <div className="switch" />
+                  </div>
+                </div>
+
+                <div className="settings-card">
+                  <h3>Workspace analytics</h3>
+                  <div className="desc">Admin-only view of activity across the whole workspace.</div>
+                  <div className="stat-grid" style={{ marginBottom: 0 }}>
+                    <div className="stat-card"><div className="stat-num display">128</div><div className="stat-label">Total tasks</div></div>
+                    <div className="stat-card"><div className="stat-num display">6</div><div className="stat-label">Active members</div></div>
+                    <div className="stat-card"><div className="stat-num display">92%</div><div className="stat-label">On-time completion</div></div>
+                    <div className="stat-card"><div className="stat-num display">6</div><div className="stat-label">Boards</div></div>
+                  </div>
+                </div>
+
+                <div className="settings-card danger-card">
+                  <h3 style={{ color: "var(--coral-deep)" }}>Danger zone</h3>
+                  <div className="desc">These actions are permanent and can't be undone. <b>Owner approval required.</b></div>
+                  <div className="danger-row">
+                    <div>
+                      <div className="label">Delete this workspace</div>
+                      <div className="sub">All boards, cards, and files will be permanently removed.</div>
+                    </div>
+                    <button className="btn-danger" type="button">Delete workspace</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      default:
+        return (
+          <div className="view">
+            <div className="page-head">
+              <div>
+                <h1 className="display">Workspace overview</h1>
+                <p>How Meridian &amp; Co. is doing as a whole — not just your own tasks.</p>
+              </div>
+              <div className="date-pill">Monday, August 3, 2026</div>
+            </div>
+
+            <div className="stat-grid">
+              <div className="stat-card">
+                <div className="stat-top">
+                  <div className="stat-icon" style={{ background: "#EFECFF" }}>
+                    <span className="material-symbols-outlined" style={{ color: "var(--violet)" }}>group</span>
+                  </div>
+                </div>
+                <div className="stat-num display">6</div>
+                <div className="stat-label">Active members</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-top">
+                  <div className="stat-icon" style={{ background: "#FFEDEA" }}>
+                    <span className="material-symbols-outlined" style={{ color: "var(--coral-deep)" }}>dashboard</span>
+                  </div>
+                </div>
+                <div className="stat-num display">6</div>
+                <div className="stat-label">Boards across workspace</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-top">
+                  <div className="stat-icon" style={{ background: "#E3F7F4" }}>
+                    <span className="material-symbols-outlined" style={{ color: "var(--teal)" }}>task_alt</span>
+                  </div>
+                </div>
+                <div className="stat-num display">92%</div>
+                <div className="stat-label">Org-wide on-time completion</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-top">
+                  <div className="stat-icon" style={{ background: "#FFF3D6" }}>
+                    <span className="material-symbols-outlined" style={{ color: "#B8860B" }}>pending</span>
+                  </div>
+                </div>
+                <div className="stat-num display">2</div>
+                <div className="stat-label">Pending invites</div>
+              </div>
+            </div>
+
+            <div className="body-grid">
+              <div>
+                <div className="section-title">
+                  <h2>Team activity</h2>
+                  <a href="#" onClick={(e) => { e.preventDefault(); setActivePage("audit"); }}>View audit log</a>
+                </div>
+                <div className="team-table">
+                  {[
+                    { name: "Sofia Reyes", role: "Owner", metric: "14 tasks done this wk", color: "var(--violet)" },
+                    { name: "Priya Nandakumar", role: "Admin", metric: "9 tasks done this wk", color: "var(--coral)" },
+                    { name: "Alex Rivera", role: "", metric: "11 tasks done this wk", color: "var(--teal)" },
+                    { name: "David Chen", role: "", metric: "7 tasks done this wk", color: "var(--amber)" },
+                    { name: "Amara Okafor", role: "", metric: "5 tasks done this wk", color: "var(--violet)" },
+                  ].map((member) => (
+                    <div key={member.name} className="team-row">
+                      <div className="team-avatar" style={{ background: member.color }} />
+                      <div className="team-name">
+                        {member.name}
+                        {member.role ? <span className={`role-badge role-${member.role.toLowerCase()}`}>{member.role}</span> : null}
+                      </div>
+                      <div className="team-metric">{member.metric}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="section-title" style={{ marginTop: 28 }}>
+                  <h2>All boards</h2>
+                  <a href="#" onClick={(e) => { e.preventDefault(); setActivePage("boards"); }}>Manage boards</a>
+                </div>
+                <div className="board-grid" style={{ marginBottom: 0 }}>
+                  {[
+                    { title: "Product Roadmap", sub: "18 cards · 3 lists", progress: "62%", color: "var(--coral)", icon: "map", avatars: ["var(--violet)", "var(--teal)", "var(--amber)"], owner: "Owner: Sofia Reyes" },
+                    { title: "Marketing Campaign", sub: "24 cards · 4 lists", progress: "38%", color: "var(--teal)", icon: "campaign", avatars: ["var(--coral)", "var(--violet)"], owner: "Owner: Priya Nandakumar" },
+                  ].map((board) => (
+                    <div key={board.title} className="board-card">
+                      <div className="board-card-top">
+                        <div className="board-icon" style={{ background: board.color }}>
+                          <span className="material-symbols-outlined">{board.icon}</span>
+                        </div>
+                        <span className="material-symbols-outlined" style={{ color: "var(--ink-faint)", fontSize: "18px" }}>more_horiz</span>
+                      </div>
+                      <h3>{board.title}</h3>
+                      <div className="sub">{board.sub}</div>
+                      <div className="board-progress"><div className="board-progress-fill" style={{ width: board.progress, background: board.color }} /></div>
+                      <div className="board-bottom">
+                        <div className="avatar-stack">
+                          {board.avatars.map((color) => (<div key={color} className="a" style={{ background: color }} />))}
+                        </div>
+                        <div className="board-meta">{board.owner}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="section-title">
+                  <h2>Pending invites</h2>
+                </div>
+                <div className="team-table" style={{ marginBottom: 20 }}>
+                  <div className="invite-pending"><span>jordan@meridianco.com</span><span className="resend-link">Resend</span></div>
+                  <div className="invite-pending"><span>lena@meridianco.com</span><span className="resend-link">Resend</span></div>
+                </div>
+
+                <div className="section-title">
+                  <h2>Recent admin actions</h2>
+                </div>
+                <div className="activity-card">
+                  <div className="activity-item">
+                    <div className="act-avatar" style={{ background: "var(--violet)" }} />
+                    <div><div className="act-text"><b>You</b> changed <b>Marcus Webb's</b> role to Viewer</div><div className="act-time">3 hours ago</div></div>
+                  </div>
+                  <div className="activity-item">
+                    <div className="act-avatar" style={{ background: "var(--teal)" }} />
+                    <div><div className="act-text"><b>Sofia Reyes</b> invited <b>2 new members</b></div><div className="act-time">Yesterday</div></div>
+                  </div>
+                  <div className="activity-item">
+                    <div className="act-avatar" style={{ background: "var(--coral)" }} />
+                    <div><div className="act-text"><b>You</b> archived board <b>Q1 Retro</b></div><div className="act-time">2 days ago</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+    }
+  };
+
   if (showDashboard) {
+    const navItemClass = (page: typeof activePage) => `nav-item${activePage === page ? " active" : ""}`;
+
     return (
       <div className="app">
         <aside className="sidebar">
@@ -124,47 +665,27 @@ const App = () => {
           </div>
 
           <div className="nav-section">
-            <div className="nav-item active">
-              <span className="material-symbols-outlined">home</span>Home
-            </div>
-            <div className="nav-item">
-              <span className="material-symbols-outlined">check_circle</span>My tasks<span className="count">6</span>
-            </div>
-            <div className="nav-item">
-              <span className="material-symbols-outlined">notifications</span>Notifications<span className="count">3</span>
-            </div>
-            <div className="nav-item">
-              <span className="material-symbols-outlined">group</span>Members
-            </div>
-            <div className="nav-item">
-              <span className="material-symbols-outlined">settings</span>Settings
-            </div>
+            <div className={navItemClass("home")} onClick={() => setActivePage("home")}> <span className="material-symbols-outlined">home</span>Overview</div>
+            <div className={navItemClass("members")} onClick={() => setActivePage("members")}> <span className="material-symbols-outlined">group</span>Members<span className="count">6</span></div>
+            <div className={navItemClass("audit")} onClick={() => setActivePage("audit")}> <span className="material-symbols-outlined">history</span>Audit log</div>
+            <div className={navItemClass("billing")} onClick={() => setActivePage("billing")}> <span className="material-symbols-outlined">payments</span>Billing & plan</div>
+            <div className={navItemClass("settings")} onClick={() => setActivePage("settings")}> <span className="material-symbols-outlined">settings</span>Settings</div>
           </div>
 
           <div className="nav-section boards-list">
             <div className="nav-label">Boards</div>
-            <div className="board-link">
-              <span className="board-dot" style={{ background: "var(--coral)" }} />Product Roadmap
-            </div>
-            <div className="board-link">
-              <span className="board-dot" style={{ background: "var(--teal)" }} />Marketing Campaign
-            </div>
-            <div className="board-link">
-              <span className="board-dot" style={{ background: "var(--violet)" }} />Sprint 14
-            </div>
-            <div className="board-link">
-              <span className="board-dot" style={{ background: "var(--amber)" }} />Client Onboarding
-            </div>
-            <div className="nav-item" style={{ color: "#8B8F99" }}>
-              <span className="material-symbols-outlined">add</span>New board
-            </div>
+            <div className="board-link" onClick={() => setActivePage("boards")}><span className="board-dot" style={{ background: "var(--coral)" }} />Product Roadmap</div>
+            <div className="board-link" onClick={() => setActivePage("boards")}><span className="board-dot" style={{ background: "var(--teal)" }} />Marketing Campaign</div>
+            <div className="board-link" onClick={() => setActivePage("boards")}><span className="board-dot" style={{ background: "var(--violet)" }} />Sprint 14</div>
+            <div className="board-link" onClick={() => setActivePage("boards")}><span className="board-dot" style={{ background: "var(--amber)" }} />Client Onboarding</div>
+            <div className="nav-item" style={{ color: "#8B8F99" }} onClick={handleOpenNewBoard}><span className="material-symbols-outlined">add</span>New board</div>
           </div>
 
           <div className="sidebar-bottom">
             <div className="user-avatar" />
             <div className="user-meta">
               <div className="user-name">{userName}</div>
-              <div className="user-role">Member</div>
+              <div className="user-role">Admin</div>
             </div>
             <button className="icon-btn logout-btn" type="button" onClick={handleLogout} aria-label="Log out" title="Log out">
               <span className="material-symbols-outlined">logout</span>
@@ -180,6 +701,7 @@ const App = () => {
               <span className="kbd">⌘K</span>
             </div>
             <div className="topbar-right">
+              <span className="role-tag">Admin view</span>
               <button className="icon-btn" type="button">
                 <span className="material-symbols-outlined">notifications</span>
                 <span className="badge" />
@@ -187,236 +709,89 @@ const App = () => {
               <button className="icon-btn" type="button">
                 <span className="material-symbols-outlined">help</span>
               </button>
-              <button className="btn-new" type="button">
+              <button className="btn-new" type="button" onClick={handleOpenNewBoard}>
                 <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>add</span>New board
               </button>
               <div className="user-avatar" />
             </div>
           </div>
 
-          <div className="content">
-            <div className="greet-row">
-              <div className="greet">
-                <h1 className="display">Good evening, {userName} 👋</h1>
-                <p>Here's what's moving across Meridian &amp; Co. today.</p>
-              </div>
-              <div className="date-pill">Monday, August 3, 2026</div>
+          <div className="content">{renderAdminContent()}</div>
+        </main>
+
+        <div className={`modal-overlay${showNewBoardModal ? " open" : ""}`} onClick={(e) => e.target === e.currentTarget && handleCloseNewBoard()}>
+          <div className="modal">
+            <div className="modal-head">
+              <h3>Create a new board</h3>
+              <button className="modal-close" type="button" onClick={handleCloseNewBoard}>
+                <span className="material-symbols-outlined">close</span>
+              </button>
             </div>
-
-            <div className="stat-grid">
-              <div className="stat-card">
-                <div className="stat-top">
-                  <div className="stat-icon" style={{ background: "#FFEDEA" }}>
-                    <span className="material-symbols-outlined" style={{ color: "var(--coral-deep)" }}>assignment</span>
-                  </div>
-                  <div className="stat-trend up">
-                    <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>arrow_upward</span>12%
-                  </div>
-                </div>
-                <div className="stat-num display">128</div>
-                <div className="stat-label">Total tasks across boards</div>
+            <div className="modal-body">
+              <div className="m-field">
+                <label htmlFor="boardName">Board name</label>
+                <input type="text" id="boardName" placeholder="e.g. Q4 Marketing Launch" />
               </div>
-
-              <div className="stat-card">
-                <div className="stat-top">
-                  <div className="stat-icon" style={{ background: "#FFF3D6" }}>
-                    <span className="material-symbols-outlined" style={{ color: "#B8860B" }}>pending_actions</span>
-                  </div>
-                  <div className="stat-trend up">
-                    <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>arrow_upward</span>4%
-                  </div>
-                </div>
-                <div className="stat-num display">34</div>
-                <div className="stat-label">In progress right now</div>
+              <div className="m-field">
+                <label htmlFor="boardDesc">Description <span style={{ color: "var(--ink-faint)", fontWeight: 500 }}>(optional)</span></label>
+                <textarea id="boardDesc" placeholder="What is this board for?" />
               </div>
-
-              <div className="stat-card">
-                <div className="stat-top">
-                  <div className="stat-icon" style={{ background: "#FFEDEA" }}>
-                    <span className="material-symbols-outlined" style={{ color: "var(--coral-deep)" }}>warning</span>
-                  </div>
-                  <div className="stat-trend down">
-                    <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>arrow_downward</span>2%
-                  </div>
+              <div className="m-field">
+                <label>Color</label>
+                <div className="color-picker">
+                  {[
+                    { color: "var(--coral)" },
+                    { color: "var(--amber)" },
+                    { color: "var(--teal)" },
+                    { color: "var(--violet)" },
+                  ].map((option) => (
+                    <div key={option.color} className="color-swatch" style={{ background: option.color }} />
+                  ))}
                 </div>
-                <div className="stat-num display">5</div>
-                <div className="stat-label">Overdue tasks</div>
               </div>
-
-              <div className="stat-card">
-                <div className="stat-top">
-                  <div className="stat-icon" style={{ background: "#E3F7F4" }}>
-                    <span className="material-symbols-outlined" style={{ color: "var(--teal)" }}>task_alt</span>
-                  </div>
-                  <div className="stat-trend up">
-                    <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>arrow_upward</span>18%
-                  </div>
-                </div>
-                <div className="stat-num display">41</div>
-                <div className="stat-label">Completed this week</div>
+              <div className="m-field">
+                <label htmlFor="boardVis">Visibility</label>
+                <select id="boardVis">
+                  <option>Workspace — everyone at Meridian &amp; Co. can view</option>
+                  <option>Private — only invited members</option>
+                </select>
               </div>
             </div>
-
-            <div className="body-grid">
-              <div>
-                <div className="section-title">
-                  <h2>Your boards</h2>
-                  <a href="#">View all</a>
-                </div>
-
-                <div className="board-grid">
-                  <div className="board-card">
-                    <div className="board-card-top">
-                      <div className="board-icon" style={{ background: "var(--coral)" }}>
-                        <span className="material-symbols-outlined">map</span>
-                      </div>
-                      <span className="material-symbols-outlined" style={{ color: "var(--ink-faint)", fontSize: "18px" }}>more_horiz</span>
-                    </div>
-                    <h3>Product Roadmap</h3>
-                    <div className="sub">18 cards · 3 lists</div>
-                    <div className="board-progress"><div className="board-progress-fill" style={{ width: "62%", background: "var(--coral)" }} /></div>
-                    <div className="board-bottom">
-                      <div className="avatar-stack">
-                        <div className="a" style={{ background: "var(--violet)" }} />
-                        <div className="a" style={{ background: "var(--teal)" }} />
-                        <div className="a" style={{ background: "var(--amber)" }} />
-                      </div>
-                      <div className="board-meta">Updated 12m ago</div>
-                    </div>
-                  </div>
-
-                  <div className="board-card">
-                    <div className="board-card-top">
-                      <div className="board-icon" style={{ background: "var(--teal)" }}>
-                        <span className="material-symbols-outlined">campaign</span>
-                      </div>
-                      <span className="material-symbols-outlined" style={{ color: "var(--ink-faint)", fontSize: "18px" }}>more_horiz</span>
-                    </div>
-                    <h3>Marketing Campaign</h3>
-                    <div className="sub">24 cards · 4 lists</div>
-                    <div className="board-progress"><div className="board-progress-fill" style={{ width: "38%", background: "var(--teal)" }} /></div>
-                    <div className="board-bottom">
-                      <div className="avatar-stack">
-                        <div className="a" style={{ background: "var(--coral)" }} />
-                        <div className="a" style={{ background: "var(--violet)" }} />
-                      </div>
-                      <div className="board-meta">Updated 1h ago</div>
-                    </div>
-                  </div>
-
-                  <div className="board-card">
-                    <div className="board-card-top">
-                      <div className="board-icon" style={{ background: "var(--violet)" }}>
-                        <span className="material-symbols-outlined">bolt</span>
-                      </div>
-                      <span className="material-symbols-outlined" style={{ color: "var(--ink-faint)", fontSize: "18px" }}>more_horiz</span>
-                    </div>
-                    <h3>Sprint 14</h3>
-                    <div className="sub">31 cards · 5 lists</div>
-                    <div className="board-progress"><div className="board-progress-fill" style={{ width: "81%", background: "var(--violet)" }} /></div>
-                    <div className="board-bottom">
-                      <div className="avatar-stack">
-                        <div className="a" style={{ background: "var(--teal)" }} />
-                        <div className="a" style={{ background: "var(--coral)" }} />
-                        <div className="a" style={{ background: "var(--amber)" }} />
-                      </div>
-                      <div className="board-meta">Updated 3h ago</div>
-                    </div>
-                  </div>
-
-                  <div className="board-card">
-                    <div className="board-card-top">
-                      <div className="board-icon" style={{ background: "var(--amber)" }}>
-                        <span className="material-symbols-outlined">handshake</span>
-                      </div>
-                      <span className="material-symbols-outlined" style={{ color: "var(--ink-faint)", fontSize: "18px" }}>more_horiz</span>
-                    </div>
-                    <h3>Client Onboarding</h3>
-                    <div className="sub">12 cards · 3 lists</div>
-                    <div className="board-progress"><div className="board-progress-fill" style={{ width: "20%", background: "var(--amber)" }} /></div>
-                    <div className="board-bottom">
-                      <div className="avatar-stack">
-                        <div className="a" style={{ background: "var(--violet)" }} />
-                      </div>
-                      <div className="board-meta">Updated yesterday</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="section-title">
-                  <h2>Assigned to you</h2>
-                  <a href="#">View all</a>
-                </div>
-
-                <div className="task-list">
-                  <div className="task-row">
-                    <div className="task-check" />
-                    <div className="task-title"><span className="task-cid">#TF-142</span>&nbsp; Prep launch checklist</div>
-                    <div className="task-due due-soon">Due today</div>
-                  </div>
-                  <div className="task-row">
-                    <div className="task-check" />
-                    <div className="task-title"><span className="task-cid">#TF-138</span>&nbsp; Set up S3 attachments</div>
-                    <div className="task-due due-soon">Due tomorrow</div>
-                  </div>
-                  <div className="task-row">
-                    <div className="task-check" />
-                    <div className="task-title"><span className="task-cid">#TF-119</span>&nbsp; Review onboarding copy</div>
-                    <div className="task-due due-ok">Due in 4 days</div>
-                  </div>
-                  <div className="task-row">
-                    <div className="task-check" />
-                    <div className="task-title"><span className="task-cid">#TF-104</span>&nbsp; QA mobile push notifications</div>
-                    <div className="task-due due-ok">Due in 6 days</div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="section-title">
-                  <h2>Recent activity</h2>
-                </div>
-                <div className="activity-card">
-                  <div className="activity-item">
-                    <div className="act-avatar" style={{ background: "var(--teal)" }} />
-                    <div>
-                      <div className="act-text"><b>Sofia Reyes</b> moved <b>#TF-142</b> to Done</div>
-                      <div className="act-time">6 minutes ago</div>
-                    </div>
-                  </div>
-                  <div className="activity-item">
-                    <div className="act-avatar" style={{ background: "var(--violet)" }} />
-                    <div>
-                      <div className="act-text"><b>David Chen</b> commented on <b>#TF-138</b></div>
-                      <div className="act-time">42 minutes ago</div>
-                    </div>
-                  </div>
-                  <div className="activity-item">
-                    <div className="act-avatar" style={{ background: "var(--coral)" }} />
-                    <div>
-                      <div className="act-text"><b>You</b> attached a file to <b>#TF-119</b></div>
-                      <div className="act-time">1 hour ago</div>
-                    </div>
-                  </div>
-                  <div className="activity-item">
-                    <div className="act-avatar" style={{ background: "var(--amber)" }} />
-                    <div>
-                      <div className="act-text"><b>Amara Okafor</b> created board <b>Client Onboarding</b></div>
-                      <div className="act-time">Yesterday</div>
-                    </div>
-                  </div>
-                  <div className="activity-item">
-                    <div className="act-avatar" style={{ background: "var(--teal)" }} />
-                    <div>
-                      <div className="act-text"><b>Sofia Reyes</b> invited <b>3 members</b> to Meridian &amp; Co.</div>
-                      <div className="act-time">2 days ago</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="modal-foot">
+              <button className="btn-secondary" type="button" onClick={handleCloseNewBoard}>Cancel</button>
+              <button className="btn-new" type="button" onClick={handleCloseNewBoard}>Create board</button>
             </div>
           </div>
-        </main>
+        </div>
+
+        <div className={`modal-overlay${showInviteModal ? " open" : ""}`} onClick={(e) => e.target === e.currentTarget && handleCloseInvite()}>
+          <div className="modal">
+            <div className="modal-head">
+              <h3>Invite a member</h3>
+              <button className="modal-close" type="button" onClick={handleCloseInvite}>
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="m-field">
+                <label>Email address</label>
+                <input type="email" placeholder="teammate@company.com" />
+              </div>
+              <div className="m-field">
+                <label>Role</label>
+                <select>
+                  <option>Member</option>
+                  <option>Admin</option>
+                  <option>Viewer</option>
+                </select>
+              </div>
+            </div>
+            <div className="modal-foot">
+              <button className="btn-secondary" type="button" onClick={handleCloseInvite}>Cancel</button>
+              <button className="btn-new" type="button" onClick={handleCloseInvite}>Send invite</button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
