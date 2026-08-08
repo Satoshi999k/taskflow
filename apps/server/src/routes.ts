@@ -102,28 +102,49 @@ router.post("/api/v1/login", async (req, res) => {
   let membershipRole: string | null = null;
   try {
     if (data.user?.id) {
-      const membershipUserId = profileId || data.user.id;
+      const authUserId = data.user.id;
+      const candidateUserIds = [profileId, authUserId].filter((id): id is string => Boolean(id));
       let membershipRes;
 
-      membershipRes = await supabaseAdmin
-        .from("workspace_members")
-        .select("workspace_id,role")
-        .eq("user_id", membershipUserId)
-        .maybeSingle();
-
-      if ((!membershipRes.data || membershipRes.error) && membershipUserId !== data.user.id) {
+      for (const candidateUserId of candidateUserIds) {
         membershipRes = await supabaseAdmin
           .from("workspace_members")
           .select("workspace_id,role")
-          .eq("user_id", data.user.id)
+          .eq("user_id", candidateUserId)
           .maybeSingle();
+
+        if (membershipRes.data && !membershipRes.error) {
+          break;
+        }
       }
 
-      const membership = membershipRes.data as any;
+      if ((!membershipRes?.data || membershipRes.error) && email) {
+        const alternateProfile = await supabaseAdmin
+          .from("users")
+          .select("id")
+          .eq("email", email)
+          .maybeSingle();
+
+        if (alternateProfile.data?.id && !candidateUserIds.includes(alternateProfile.data.id)) {
+          membershipRes = await supabaseAdmin
+            .from("workspace_members")
+            .select("workspace_id,role")
+            .eq("user_id", alternateProfile.data.id)
+            .maybeSingle();
+        }
+      }
+
+      const membership = membershipRes?.data as any;
       const workspaceId = membership?.workspace_id;
       const role = membership?.role as string | null;
 
       if (!membership || !workspaceId) {
+        console.warn("Workspace membership lookup failed", {
+          authUserId,
+          profileId,
+          checkedIds: candidateUserIds,
+          email,
+        });
         return res.status(403).json({ error: "Access denied. User is not a member of any workspace." });
       }
 
