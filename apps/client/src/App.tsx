@@ -45,21 +45,48 @@ const App = () => {
       if (sessionError || !sessionData?.session?.user?.id) return;
 
       const userId = sessionData.session.user.id;
+      const userEmail = sessionData.session.user.email;
+      let profileId: string | null = null;
+      let profileName: string | null = null;
+
       const { data: profileData, error: profileError } = await supabase
         .from("users")
-        .select("name")
+        .select("id,name,email")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
 
-      if (!profileError && profileData?.name) {
-        setUserName(profileData.name);
-        localStorage.setItem("taskflowUserName", profileData.name);
+      if (profileError) {
+        console.warn("Failed to load profile by auth ID", profileError);
       }
 
+      if (profileData?.id) {
+        profileId = profileData.id;
+        profileName = profileData.name || null;
+      }
+
+      if (!profileId && userEmail) {
+        const { data: profileByEmail, error: profileByEmailError } = await supabase
+          .from("users")
+          .select("id,name,email")
+          .eq("email", userEmail)
+          .maybeSingle();
+
+        if (!profileByEmailError && profileByEmail?.id) {
+          profileId = profileByEmail.id;
+          profileName = profileByEmail.name || null;
+        }
+      }
+
+      if (profileName) {
+        setUserName(profileName);
+        localStorage.setItem("taskflowUserName", profileName);
+      }
+
+      const membershipUserId = profileId || userId;
       const { data: membershipData, error: membershipError } = await supabase
         .from("workspace_members")
         .select("workspace_id")
-        .eq("user_id", userId)
+        .eq("user_id", membershipUserId)
         .single();
 
       if (!membershipError && membershipData?.workspace_id) {

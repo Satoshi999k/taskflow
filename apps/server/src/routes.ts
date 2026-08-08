@@ -103,10 +103,11 @@ router.post("/api/v1/login", async (req, res) => {
   let membershipRole: string | null = null;
   try {
     if (data.user?.id) {
+      const membershipUserId = profileId || data.user.id;
       const membershipRes = await supabaseAdmin
         .from("workspace_members")
         .select("workspace_id,role")
-        .eq("user_id", data.user.id)
+        .eq("user_id", membershipUserId)
         .limit(1)
         .maybeSingle();
 
