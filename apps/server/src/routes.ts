@@ -104,19 +104,18 @@ router.post("/api/v1/login", async (req, res) => {
     if (data.user?.id) {
       const membershipUserId = profileId || data.user.id;
       let membershipRes;
-      if (membershipUserId && data.user.id && membershipUserId !== data.user.id) {
+
+      membershipRes = await supabaseAdmin
+        .from("workspace_members")
+        .select("workspace_id,role")
+        .eq("user_id", membershipUserId)
+        .maybeSingle();
+
+      if ((!membershipRes.data || membershipRes.error) && membershipUserId !== data.user.id) {
         membershipRes = await supabaseAdmin
           .from("workspace_members")
           .select("workspace_id,role")
-          .or(`user_id.eq.${membershipUserId},user_id.eq.${data.user.id}`)
-          .limit(1)
-          .maybeSingle();
-      } else {
-        membershipRes = await supabaseAdmin
-          .from("workspace_members")
-          .select("workspace_id,role")
-          .eq("user_id", membershipUserId || data.user.id)
-          .limit(1)
+          .eq("user_id", data.user.id)
           .maybeSingle();
       }
 
