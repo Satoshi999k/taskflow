@@ -11,6 +11,7 @@ const App = () => {
   const [backendStatus, setBackendStatus] = useState<"checking" | "ok" | "error">("checking");
   const [backendMessage, setBackendMessage] = useState("Checking login server...");
   const [userName, setUserName] = useState("Alex Rivera");
+  const [workspaceName, setWorkspaceName] = useState("Meridian & Co.");
   const [activePage, setActivePage] = useState<"home" | "boards" | "audit" | "members" | "billing" | "settings">("home");
   const [showNewBoardModal, setShowNewBoardModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -89,6 +90,7 @@ const App = () => {
         json.user?.email;
 
       setUserName(authName || "User");
+      setWorkspaceName(json.workspace?.name || "Meridian & Co.");
       setShowDashboard(true);
       setShowLogin(false);
     } catch (error) {

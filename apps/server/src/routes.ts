@@ -99,11 +99,38 @@ router.post("/api/v1/login", async (req, res) => {
   const displayName =
     profileName || authMetadataName || deriveNameFromEmail(data.user?.email);
 
+  let workspaceName: string | null = null;
+  try {
+    if (data.user?.id) {
+      const membershipRes = await supabaseAdmin
+        .from("workspace_members")
+        .select("workspace_id")
+        .eq("userId", data.user.id)
+        .limit(1)
+        .maybeSingle();
+
+      const workspaceId = (membershipRes.data as any)?.workspace_id;
+      if (workspaceId) {
+        const workspaceRes = await supabaseAdmin
+          .from("workspaces")
+          .select("name")
+          .eq("id", workspaceId)
+          .limit(1)
+          .maybeSingle();
+
+        workspaceName = (workspaceRes.data as any)?.name || null;
+      }
+    }
+  } catch (workspaceError) {
+    console.warn("Failed to fetch workspace name", workspaceError);
+  }
+
   return res.json({
     user: data.user,
     session: data.session,
     profile: { name: profileName },
     display_name: displayName,
+    workspace: { name: workspaceName },
   });
 });
 
