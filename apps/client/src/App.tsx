@@ -3,7 +3,7 @@ import { supabase } from "./supabaseClient";
 
 const App = () => {
   const [showLogin, setShowLogin] = useState(false);
-  const [showDashboard, setShowDashboard] = useState(true);
+  const [showDashboard, setShowDashboard] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
