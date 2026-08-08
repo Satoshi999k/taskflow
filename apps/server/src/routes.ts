@@ -139,8 +139,18 @@ router.post("/api/v1/login", async (req, res) => {
           profileId,
           checkedIds: candidateUserIds,
           email,
+          membershipResponse: membershipRes?.data,
+          membershipError: membershipRes?.error,
         });
-        return res.status(403).json({ error: "Access denied. User is not a member of any workspace." });
+        return res.status(403).json({
+          error: "Access denied. User is not a member of any workspace.",
+          authUserId,
+          profileId,
+          checkedIds: candidateUserIds,
+          email,
+          membershipResponse: membershipRes?.data,
+          membershipError: membershipRes?.error,
+        });
       }
 
       membershipRole = role || "MEMBER";
